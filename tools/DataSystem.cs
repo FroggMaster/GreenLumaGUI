@@ -23,6 +23,29 @@ namespace CN_GreenLumaGUI.tools
         public string LastVersion { get; set; } = "null";
         public long StartSuccessTimes { get; set; }
 
+        private string languageCode = string.Empty;
+        public string LanguageCode
+        {
+            get
+            {
+                // 如果用戶未設定語言（首次啟動），則根據系統地區自動選擇
+                if (string.IsNullOrWhiteSpace(languageCode))
+                {
+                    return LocalizationService.GetSystemLanguageCode();
+                }
+                return languageCode;
+            }
+            set
+            {
+                var targetCode = string.IsNullOrWhiteSpace(value) ? LocalizationService.DefaultLanguageCode : value;
+                if (languageCode == targetCode)
+                    return;
+                languageCode = targetCode;
+                LocalizationService.ApplyLanguage(languageCode);
+                WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(LanguageCode)));
+            }
+        }
+
         private string? steamPath;
         public string? SteamPath
         {
@@ -157,7 +180,29 @@ namespace CN_GreenLumaGUI.tools
             }
         }
 
-        //添加完字段后记得看看LoadData()和SettingsPageViewModel第26行
+        private bool getManifestInfoFromApi;
+        public bool GetManifestInfoFromApi
+        {
+            get => getManifestInfoFromApi;
+            set
+            {
+                getManifestInfoFromApi = value;
+                WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(GetManifestInfoFromApi)));
+            }
+        }
+
+        private bool echoStartSteamNormalButton;
+        public bool EchoStartSteamNormalButton
+        {
+            get => echoStartSteamNormalButton;
+            set
+            {
+                echoStartSteamNormalButton = value;
+                WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(EchoStartSteamNormalButton)));
+            }
+        }
+
+        //添加完字段后记得看看LoadData()和SettingsPageViewModel第34行
 
         private DataSystem()
         {
@@ -199,6 +244,7 @@ namespace CN_GreenLumaGUI.tools
             }
             LastVersion = readConfig?.LastVersion ?? "null";
             StartSuccessTimes = readConfig?.StartSuccessTimes ?? 0;
+            LanguageCode = readConfig?.LanguageCode ?? string.Empty;
             SteamPath = readConfig?.SteamPath;
             DarkMode = readConfig?.DarkMode ?? false;
             HidePromptText = readConfig?.HidePromptText ?? false;
@@ -212,6 +258,8 @@ namespace CN_GreenLumaGUI.tools
             TryGetAppNameOnline = readConfig?.TryGetAppNameOnline ?? false;
             GetDepotOnlyKey = readConfig?.GetDepotOnlyKey ?? false;
             SingleConfigFileMode = readConfig?.SingleConfigFileMode ?? false;
+            GetManifestInfoFromApi = readConfig?.GetManifestInfoFromApi ?? true;
+            EchoStartSteamNormalButton = readConfig?.EchoStartSteamNormalButton ?? false;
             //读取游戏列表文件
             string gameDataText = "[]";
             if (File.Exists(unlockListFile))

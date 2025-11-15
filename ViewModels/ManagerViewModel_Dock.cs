@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
+using System.Windows.Controls;
 using System.Xml;
 
 namespace CN_GreenLumaGUI.ViewModels
@@ -23,9 +24,9 @@ namespace CN_GreenLumaGUI.ViewModels
         const string defStartButtonColor = "#64bd4d";
         const string closeStartButtonColor = "#f44b56";//ffa754
         const string darkStartButtonColor = "#424242";
-        const string defStartButtonContent = "启动Steam";
-        const string closeStartButtonContent = "关闭Steam";
-        const string darkStartButtonContent = "X";
+        string defStartButtonContent => LocalizationService.GetString("Bottom_Start");
+        string closeStartButtonContent => LocalizationService.GetString("Bottom_Close");
+        string darkStartButtonContent => LocalizationService.GetString("Bottom_Loading");
 
         private bool CancelWait { get; set; }
 
@@ -38,13 +39,16 @@ namespace CN_GreenLumaGUI.ViewModels
             StartButtonColor = darkStartButtonColor;
             StartButtonContent = darkStartButtonContent;
             LoadingBarEcho = Visibility.Hidden;
-            ButtonPromptTextEcho = Visibility.Collapsed;
-            FAQButtonEcho = Visibility.Collapsed;
+            NormalStartButtonVisibility = DataSystem.Instance.EchoStartSteamNormalButton ? Visibility.Visible : Visibility.Collapsed;
+            FAQButtonEcho = DataSystem.Instance.HidePromptText ? Visibility.Collapsed : Visibility.Visible;
             FAQButtonCmd = new RelayCommand(FAQButton);
             StartButtonCmd = new RelayCommand(StartButton);
+            NormalStartButtonCmd = new RelayCommand(NormalStartButton);
             NormalRestartButtonCmd = new RelayCommand(NormalRestartButton);
             InjectRestartButtonCmd = new RelayCommand(InjectRestartButton);
             checkedNum = DataSystem.Instance.CheckedNum;
+
+            EchoButtonPromptTextDelay();
 
             WeakReferenceMessenger.Default.Register<LoadFinishedMessage>(this, (r, m) =>
             {
@@ -80,7 +84,27 @@ namespace CN_GreenLumaGUI.ViewModels
                 if (m.kind == "HidePromptText")
                 {
                     ButtonPromptTextEcho = DataSystem.Instance.HidePromptText ? Visibility.Collapsed : Visibility.Visible;
-                    FAQButtonEcho = ButtonPromptTextEcho;
+                    FAQButtonEcho = DataSystem.Instance.HidePromptText ? Visibility.Collapsed : Visibility.Visible;
+                }
+                if (m.kind == "EchoStartSteamNormalButton")
+                {
+                    NormalStartButtonVisibility = DataSystem.Instance.EchoStartSteamNormalButton ? Visibility.Visible : Visibility.Collapsed;
+                }
+                if (m.kind == nameof(DataSystem.Instance.LanguageCode))
+                {
+                    // 當語言變更時，根據當前按鈕狀態更新按鈕文字
+                    switch (buttonState)
+                    {
+                        case "Disable":
+                            StartButtonContent = darkStartButtonContent;
+                            break;
+                        case "StartSteam":
+                            StartButtonContent = defStartButtonContent;
+                            break;
+                        case "CloseSteam":
+                            StartButtonContent = closeStartButtonContent;
+                            break;
+                    }
                 }
             });
         }
@@ -152,15 +176,53 @@ namespace CN_GreenLumaGUI.ViewModels
             }
         }
 
+        private Visibility normalStartButtonVisibility;
+        public Visibility NormalStartButtonVisibility
+        {
+            get
+            {
+                if (buttonState != "StartSteam")
+                    return Visibility.Collapsed;
+                return normalStartButtonVisibility;
+            }
+            set
+            {
+                normalStartButtonVisibility = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool isFirstRun = true;
         private Visibility buttonPromptTextEcho;
         public Visibility ButtonPromptTextEcho
         {
-            get { return buttonPromptTextEcho; }
+            get
+            {
+                if (buttonState != "StartSteam")
+                    return Visibility.Collapsed;
+                if (!isFirstRun)
+                    return Visibility.Collapsed;
+                return buttonPromptTextEcho;
+            }
             set
             {
                 buttonPromptTextEcho = value;
                 OnPropertyChanged();
             }
+        }
+        private void EchoButtonPromptTextDelay()
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(10000);
+                if (isFirstRun)
+                {
+                    Application.Current.Dispatcher.Invoke((Action)delegate ()
+                    {
+                        ButtonPromptTextEcho = Visibility.Visible;
+                    });
+                }
+            });
         }
 
         private Visibility fAQButtonEcho;
@@ -182,9 +244,14 @@ namespace CN_GreenLumaGUI.ViewModels
             {
                 if (faqWindow is null || faqWindow.IsClosed)
                 {
-                    string? readme = OutAPI.GetFromRes("README.md");
+                    string readmeFileName = DataSystem.Instance.LanguageCode switch
+                    {
+                        "zh-CN" => "README.md",
+                        _ => $"README-{DataSystem.Instance.LanguageCode}.md"
+                    };
+                    string? readme = OutAPI.GetFromRes(readmeFileName) ?? OutAPI.GetFromRes("README-en-US.md");
                     if (readme is null) return;
-                    faqWindow = new("常见问题", TextItemModel.CreateListFromMarkDown(readme));
+                    faqWindow = new(LocalizationService.GetString("Dock_FAQ"), TextItemModel.CreateListFromMarkDown(readme));
                 }
                 if (!faqWindow.IsVisible)
                 {
@@ -198,41 +265,69 @@ namespace CN_GreenLumaGUI.ViewModels
             catch { }
         }
         public RelayCommand? StartButtonCmd { get; set; }
+        public RelayCommand? NormalStartButtonCmd { get; set; }
         public RelayCommand? NormalRestartButtonCmd { get; set; }
         public RelayCommand? InjectRestartButtonCmd { get; set; }
-        
+
         private string buttonState = "Disable";
         public static bool SteamRunning => ManagerWindow.ViewModel?.buttonState == "CloseSteam";
+        private void StartWithInject()
+        {
+            //超出上限时提醒
+            if (CheckedNumNow > MaxUnlockNum)
+            {
+                _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_UnlockLimitExceeded"));
+                return;
+            }
+            //点击开始按钮如果配置中没有路径就读取steam路径
+            if (DataSystem.Instance.SteamPath is null or "")
+            {
+                DataSystem.Instance.SteamPath = GLFileTools.GetSteamPath_Auto();
+                if (DataSystem.Instance.SteamPath == "")
+                {
+                    DataSystem.Instance.SteamPath = null;
+                    return;
+                }
+            }
+            lock (this)
+            {
+                CancelWait = false;
+            }
+            StateToDisable();
+            Task.Run(StartSteamUnlock);
+        }
+        private void StartWithoutInject()
+        {
+            //点击开始按钮如果配置中没有路径就读取steam路径
+            if (DataSystem.Instance.SteamPath is null or "")
+            {
+                DataSystem.Instance.SteamPath = GLFileTools.GetSteamPath_Auto();
+                if (DataSystem.Instance.SteamPath == "")
+                {
+                    DataSystem.Instance.SteamPath = null;
+                    return;
+                }
+            }
+            lock (this)
+            {
+                CancelWait = false;
+            }
+            StateToDisable();
+            Task.Run(StartSteamNormal);
+        }
+
+        // 启动/关闭 Steam 共用按钮
         private void StartButton()
         {
-            if (ButtonPromptTextEcho == Visibility.Visible)
-                ButtonPromptTextEcho = Visibility.Collapsed;
-
+            if (isFirstRun)
+            {
+                isFirstRun = false;
+                OnPropertyChanged(nameof(ButtonPromptTextEcho));
+            }
             switch (buttonState)
             {
                 case "StartSteam":
-                    //超出上限时提醒
-                    if (CheckedNumNow > MaxUnlockNum)
-                    {
-                        _ = OutAPI.MsgBox("解锁数量超限。");
-                        return;
-                    }
-                    //点击开始按钮如果配置中没有路径就读取steam路径
-                    if (DataSystem.Instance.SteamPath is null or "")
-                    {
-                        DataSystem.Instance.SteamPath = GLFileTools.GetSteamPath_Auto();
-                        if (DataSystem.Instance.SteamPath == "")
-                        {
-                            DataSystem.Instance.SteamPath = null;
-                            return;
-                        }
-                    }
-                    lock (this)
-                    {
-                        CancelWait = false;
-                    }
-                    StateToDisable();
-                    Task.Run(StartSteamUnlock);
+                    StartWithInject();
                     break;
                 case "CloseSteam":
                     KillSteam();
@@ -242,119 +337,99 @@ namespace CN_GreenLumaGUI.ViewModels
                     return;
             }
         }
-
+        // "N" 按钮
+        private void NormalStartButton()
+        {
+            if (isFirstRun)
+            {
+                isFirstRun = false;
+                OnPropertyChanged(nameof(ButtonPromptTextEcho));
+            }
+            switch (buttonState)
+            {
+                case "StartSteam":
+                    StartWithoutInject();
+                    break;
+                case "CloseSteam":
+                    KillSteam();
+                    StateToStartSteam();
+                    break;
+                default:
+                    return;
+            }
+        }
         // 正常重启：关闭 Steam 并正常启动（不注入）
         private void NormalRestartButton()
         {
-            // 检查 Steam 路径
-            if (DataSystem.Instance.SteamPath is null or "")
-            {
-                DataSystem.Instance.SteamPath = GLFileTools.GetSteamPath_Auto();
-                if (DataSystem.Instance.SteamPath == "")
-                {
-                    DataSystem.Instance.SteamPath = null;
-                    _ = OutAPI.MsgBox("无法找到 Steam 路径！");
-                    return;
-                }
-            }
-
-            // 验证 Steam 路径有效性
-            if (!File.Exists(DataSystem.Instance.SteamPath))
-            {
-                _ = OutAPI.MsgBox("Steam 路径无效！");
-                return;
-            }
-
-            StateToDisable();
-            Task.Run(RestartSteamNormal);
+            if (buttonState != "CloseSteam") return;
+            KillSteam();
+            StartWithoutInject();
         }
 
         // 注入重启：关闭 Steam，执行注入后启动 Steam
         private void InjectRestartButton()
         {
-            // 检查 Steam 路径
-            if (DataSystem.Instance.SteamPath is null or "")
-            {
-                DataSystem.Instance.SteamPath = GLFileTools.GetSteamPath_Auto();
-                if (DataSystem.Instance.SteamPath == "")
-                {
-                    DataSystem.Instance.SteamPath = null;
-                    _ = OutAPI.MsgBox("无法找到 Steam 路径！");
-                    return;
-                }
-            }
-
-            // 检查解锁数量
-            if (CheckedNumNow > MaxUnlockNum)
-            {
-                _ = OutAPI.MsgBox("解锁数量超限。");
-                return;
-            }
-            if (CheckedNumNow <= 0)
-            {
-                _ = OutAPI.MsgBox("请先勾选需要解锁的游戏。");
-                return;
-            }
-
-            // 使用现有的注入启动流程
-            lock (this)
-            {
-                CancelWait = false;
-            }
-            StateToDisable();
-            Task.Run(StartSteamUnlock);
+            if (buttonState != "CloseSteam") return;
+            KillSteam();
+            StartWithInject();
         }
-
-        private async Task RestartSteamNormal()
+        private int lastStartType = 0;
+        private async Task StartSteamNormal()
         {
-            try
-            {
-                OutAPI.PrintLog("正常重启 Steam 开始。");
-                
-                // 验证 Steam 路径
-                if (!File.Exists(DataSystem.Instance.SteamPath))
-                {
-                    StateToStartSteam();
-                    await Task.Delay(50);
-                    _ = OutAPI.MsgBox("Steam 路径错误！");
-                    return;
-                }
+            lastStartType = -1;
+            int lastStartSteamTimes = startSteamTimesNormal;
 
-                // 尝试关闭 Steam 及注入器（如果正在运行）
-                OutAPI.PrintLog("尝试关闭 Steam 进程...");
-                KillSteam();
-                
-                // 等待进程完全关闭
-                await Task.Delay(2000);
-                
-                OutAPI.PrintLog("正常启动 Steam（不注入）。");
-                
-                // 正常启动 Steam（不注入）
-                var steamProcess = new Process();
-                steamProcess.StartInfo.FileName = DataSystem.Instance.SteamPath;
-                steamProcess.StartInfo.UseShellExecute = false;
-                steamProcess.Start();
-                
-                OutAPI.PrintLog("Steam 进程已启动。");
-                
-                // 等待 Steam 启动完成
-                await Task.Delay(3000);
-                
-                // UpdateSteamState() 会自动检测并更新状态
-            }
-            catch (Exception e)
+            DataSystem.Instance.SaveData();
+            if (!File.Exists(DataSystem.Instance.SteamPath))
             {
                 StateToStartSteam();
-                _ = Task.Run(async () =>
-                {
-                    await OutAPI.MsgBox($"重启失败：{e.Message}");
-                });
-                OutAPI.PrintLog($"正常重启错误: {e.Message}");
+                await Task.Delay(50);
+                _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_SteamPathError"));
+                return;
             }
-        }
 
+            KillSteam();
+            //防止前一次kill不及时，略微延时
+            await Task.Delay(500);
+
+            OutAPI.PrintLog("Start Steam without inject : begin");
+
+            // 正常启动 Steam（不注入）
+            var steamProcess = new Process();
+            steamProcess.StartInfo.FileName = DataSystem.Instance.SteamPath;
+            steamProcess.StartInfo.UseShellExecute = false;
+            steamProcess.Start();
+
+
+            //等待启动，超过时间则认为未成功
+            await Task.Delay(2000);
+            long waitSeconds = 20;
+            while (waitSeconds < 100)
+            {
+                await Task.Delay(100);
+                waitSeconds++;
+                if (startSteamTimesNormal != lastStartSteamTimes)
+                    break;//启动已经成功则不再等待
+            }
+            await Task.Delay(1000);
+            if (startSteamTimesNormal == lastStartSteamTimes)
+            {
+                await Task.Delay(50);
+                lock (this)
+                {
+                    CancelWait = true;
+                }
+                OutAPI.PrintLog("Start Steam without inject : fail");
+            }
+            else
+            {
+                OutAPI.PrintLog("Start Steam without inject : success");
+            }
+            lastStartType = 0;
+        }
         private async Task StartSteamUnlock()
         {
+            lastStartType = 1;
             bool isNoCheckedGame = false;
             int nowStartSteamTimes = startSteamTimes;
             try
@@ -367,7 +442,7 @@ namespace CN_GreenLumaGUI.ViewModels
                 {
                     StateToStartSteam();
                     await Task.Delay(50);
-                    _ = OutAPI.MsgBox("steam路径错误！");
+                    _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_SteamPathError"));
                     return;
                 }
                 KillSteam();
@@ -385,7 +460,7 @@ namespace CN_GreenLumaGUI.ViewModels
                     if (!GLFileTools.WriteGreenLumaConfig(DataSystem.Instance.SteamPath))
                     {
                         StateToStartSteam();
-                        _ = OutAPI.MsgBox("写入失败！");
+                        _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_WriteFailed"));
                         return;
                     }
                     await Task.Delay(50);
@@ -395,7 +470,7 @@ namespace CN_GreenLumaGUI.ViewModels
                         //GLFileTools.DeleteGreenLumaConfig();
                         StateToStartSteam();
                         await Task.Delay(50);
-                        _ = OutAPI.MsgBox("文件缺失！");
+                        _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_FileMissing"));
                         return;
                     }
                     //throw new Exception();//测试模拟异常
@@ -423,11 +498,11 @@ namespace CN_GreenLumaGUI.ViewModels
                     if (exitCode == -1073741515)
                     {
                         //对已知运行库缺失返回值分析
-                        _ = OutAPI.MsgBox("启动失败，没有安装VC++2015x86运行库。");
+                        _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_VCRedistMissing"));
                         _ = Task.Run(() =>
                         {
                             //点击确定打开
-                            if (MessageBox.Show("是否打开微软VC++运行库官网下载地址？", "下载提示", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            if (MessageBox.Show(LocalizationService.GetString("Dock_OpenVCRedistUrl"), LocalizationService.GetString("Dock_DownloadPrompt"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                             {
                                 OutAPI.OpenInBrowser("https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vc_redist.x86.exe");
                             }
@@ -448,14 +523,14 @@ namespace CN_GreenLumaGUI.ViewModels
                         {
                             DataSystem.Instance.StartWithBak = true;
                             DataSystem.Instance.HaveTriedBak = true;
-                            OutAPI.MsgBox("检测到系统版本不支持问题，正在尝试使用兼容模式启动。").Wait();
+                            OutAPI.MsgBox(LocalizationService.GetString("Dock_TryCompatMode")).Wait();
                             //清理GreenLuma配置文件
                             GLFileTools.DeleteGreenLumaConfig();
                             //重新写入GreenLuma配置文件
                             if (!GLFileTools.WriteGreenLumaConfig(DataSystem.Instance.SteamPath))
                             {
                                 StateToStartSteam();
-                                _ = OutAPI.MsgBox("写入失败！");
+                                _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_WriteFailed"));
                                 return;
                             }
                             ;
@@ -500,15 +575,19 @@ namespace CN_GreenLumaGUI.ViewModels
                     }
                     if (fileLost)
                     {
-                        _ = OutAPI.MsgBox("临时文件丢失，可能是被Windows安全中心误删而丢失。可以尝试安装和启动其他杀毒软件（比如火绒，确定有效）启动后会自动屏蔽Windows自带的安全中心，然后再试试打开软件。");
-                        _ = Task.Run(() =>
+                        _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_TempFileLost"));
+
+                        if (DataSystem.Instance.LanguageCode.StartsWith("zh-"))
                         {
-                            //点击确定打开
-                            if (MessageBox.Show("是否打开火绒官网下载地址？", "下载提示", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            _ = Task.Run(() =>
                             {
-                                OutAPI.OpenInBrowser("https://www.huorong.cn/person5.html");
-                            }
-                        });
+                                //点击确定打开
+                                if (MessageBox.Show(LocalizationService.GetString("Dock_OpenHuorongUrl"), LocalizationService.GetString("Dock_DownloadPrompt"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                                {
+                                    OutAPI.OpenInBrowser("https://www.huorong.cn/person5.html");
+                                }
+                            });
+                        }
                         exitCodeIgnore = true;
                     }
                     //读取错误信息
@@ -522,16 +601,16 @@ namespace CN_GreenLumaGUI.ViewModels
                     //返回值异常 或是 到时间了还是没成功启动(有异常)
                     if (!exitCodeIgnore && (exitCode != 0 || (startSteamTimes == nowStartSteamTimes && errStr != null && errStr.Length > 0)))
                     {
-                        string errmsg = "启动失败！请联系开发者。";
+                        string errmsg = LocalizationService.GetString("Dock_LaunchFailedBase");
                         if (!string.IsNullOrEmpty(errStr))
-                            errmsg += $"({errStr})";
+                            errmsg = string.Format(LocalizationService.GetString("Dock_LaunchFailedFormat"), errStr);
                         _ = Task.Run(async () =>
                         {
                             await OutAPI.MsgBox(errmsg);
 
                             if (errStr == "The system cannot execute the specified program.")
                             {
-                                await OutAPI.MsgBox("查看“常见问题”可能有帮助。如无法解决建议在Github主页提交Issues。");
+                                await OutAPI.MsgBox(LocalizationService.GetString("Dock_CheckFAQ"));
                             }
                         });
                     }
@@ -543,7 +622,7 @@ namespace CN_GreenLumaGUI.ViewModels
                 else
                 {
                     OutAPI.PrintLog("checkednum<=0");
-                    _ = OutAPI.MsgBox("请先勾选需要解锁的游戏。");
+                    _ = OutAPI.MsgBox(LocalizationService.GetString("Dock_NoGamesSelected"));
                     isNoCheckedGame = true;
                 }
 
@@ -623,17 +702,18 @@ namespace CN_GreenLumaGUI.ViewModels
                 }
             }
 
+            lastStartType = 0;
         }
-        private readonly Dictionary<int, string> retValueNeedHandle = new()
+        private Dictionary<int, string> retValueNeedHandle => new()
         {
-            { 2048,"注入器启动失败，可能被杀毒软件拦截了？"},
-            { 2049,"注入器奔溃，请联系管理员"},
-            { -10010,"注入器奔溃:[未知错误]，请联系管理员"},
-            { -10020,"注入器奔溃:[起始文件创建失败]"},
-            { -10030,"注入器奔溃:[无法读取DLL文件]，有可能被占用?"},
-            { -10040,"注入器奔溃:[无法获取到Steam.exe]"},
-            { -10050,"注入器奔溃:[配置文件缺失]"},
-            { -10100,"注入器奔溃:[结束文件创建失败]"}
+            { 2048, LocalizationService.GetString("Dock_InjectorBlockedByAV")},
+            { 2049, LocalizationService.GetString("Dock_InjectorCrashed")},
+            { -10010, LocalizationService.GetString("Dock_InjectorUnknownError")},
+            { -10020, LocalizationService.GetString("Dock_InjectorStartFileFailed")},
+            { -10030, LocalizationService.GetString("Dock_InjectorDllReadFailed")},
+            { -10040, LocalizationService.GetString("Dock_InjectorSteamNotFound")},
+            { -10050, LocalizationService.GetString("Dock_InjectorConfigMissing")},
+            { -10100, LocalizationService.GetString("Dock_InjectorEndFileFailed")}
         };
         private void KillSteam()
         {
@@ -675,6 +755,8 @@ namespace CN_GreenLumaGUI.ViewModels
             StartButtonColor = darkStartButtonColor;
             StartButtonContent = darkStartButtonContent;
             LoadingBarEcho = Visibility.Visible;
+            IsExpanded = false;
+            OnPropertyChanged(nameof(NormalStartButtonVisibility));
         }
         public void StateToStartSteam()
         {
@@ -682,6 +764,8 @@ namespace CN_GreenLumaGUI.ViewModels
             StartButtonColor = defStartButtonColor;
             StartButtonContent = defStartButtonContent;
             LoadingBarEcho = Visibility.Hidden;
+            IsExpanded = false;
+            OnPropertyChanged(nameof(NormalStartButtonVisibility));
         }
         public void StateToCloseSteam()
         {
@@ -689,7 +773,10 @@ namespace CN_GreenLumaGUI.ViewModels
             StartButtonColor = closeStartButtonColor;
             StartButtonContent = closeStartButtonContent;
             LoadingBarEcho = Visibility.Hidden;
+            IsExpanded = true;
+            OnPropertyChanged(nameof(NormalStartButtonVisibility));
         }
+        private volatile int startSteamTimesNormal = 0;
         private volatile int startSteamTimes = 0;
         private Process[]? steamProcesses;
         private void UpdateSteamState()
@@ -701,10 +788,17 @@ namespace CN_GreenLumaGUI.ViewModels
                 {
                     if (buttonState != "CloseSteam")
                     {
-                        //记录本次运行启动次数
-                        startSteamTimes++;
-                        //记录总启动次数
-                        DataSystem.Instance.StartSuccessTimes++;
+                        if (lastStartType < 0)
+                        {
+                            startSteamTimesNormal++;
+                        }
+                        if (lastStartType > 0)
+                        {
+                            //记录本次运行启动次数
+                            startSteamTimes++;
+                            //记录总启动次数
+                            DataSystem.Instance.StartSuccessTimes++;
+                        }
                     }
                     StateToCloseSteam();
                 }
@@ -718,10 +812,30 @@ namespace CN_GreenLumaGUI.ViewModels
                         if (CancelWait)
                             StateToStartSteam();
                     }
-
                 }
                 Thread.Sleep(1000);
             }
+        }
+        private bool isExpanded = true;
+        public bool IsExpanded
+        {
+            get => isExpanded;
+            set
+            {
+                if (isExpanded != value)
+                {
+                    isExpanded = value;
+                    ExecuteGridAnimation(value);
+                    OnPropertyChanged(nameof(IsExpanded));
+                }
+            }
+        }
+        private void ExecuteGridAnimation(bool expand)
+        {
+            Application.Current.Dispatcher.Invoke((Action)delegate ()
+            {
+                VisualStateManager.GoToElementState(windowFrom.RestartContainer, expand ? "RestartContainerExpanded" : "RestartContainerCollapsed", true);
+            });
         }
     }
 }
