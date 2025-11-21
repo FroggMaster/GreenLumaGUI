@@ -23,13 +23,13 @@ GreenLuma 原版工具論壇網址 : https://cs.rin.ru/forum/viewtopic.php?f=10&
 
 ## 介面展示：
 
-![介面圖片0](./imgs/gui-0-en.png)
+![介面圖片0](./imgs/zh-tw/gui-0.png)
 
-![介面圖片1](./imgs/gui-1-en.png)
+![介面圖片1](./imgs/zh-tw/gui-1.png)
 
-![介面圖片2](./imgs/gui-2-en.png)
+![介面圖片2](./imgs/zh-tw/gui-2.png)
 
-![介面圖片3](./imgs/gui-3-en.png)
+![介面圖片3](./imgs/zh-tw/gui-3.png)
 
 
 ## 注意事項 :
@@ -254,9 +254,9 @@ GreenLuma 原版工具論壇網址 : https://cs.rin.ru/forum/viewtopic.php?f=10&
 6. 如果上面的排查都找不到原因，最終的解決辦法：先用相容模式嘗試啟動，然後退出軟體，最後手動執行一下 C:\tmp\exewim2oav.addy.vlz\DLLInjector_bak.exe 試試，看看系統到底會彈出什麼提示。
 
 
-#### 問: 為什麼數量上限是130個
+#### 問: 為什麼數量上限是133個
 
-答：因為 Greenluma 並不開源，最多只能解鎖130個是作者寫在程式裡的硬限制，原因未知。以前是不限制的，後來應該原作者是遇到了什麼 BUG 所以做此限制。我無法解決。
+答：因為 Greenluma 並不開源（至少我沒找到），最多只能解鎖133個是作者寫在程式裡的硬性限制。原因可能是 GreenLuma 需要將你的遊戲 ID 偽裝成其他遊戲 ID 來繞過 Steam 的驗證，但作者只找到了這麼多個能替換的免費遊戲（所有人都有權存取的）。
 
 
 #### 問: 之前一直都能用這個軟體，但是今天打開突然就不彈出 Steam 了
