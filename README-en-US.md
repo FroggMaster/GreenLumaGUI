@@ -1,4 +1,7 @@
-* This document was translated by Qwen and Deepseek. Accuracy not guaranteed for technical terminology. *
+| [简体中文](./README.md) | [English](./README-en-US.md) | [繁體中文](./README-zh-TW.md) | [Русский](./README-ru-RU.md) | [Українська](./README-uk-UA.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+* This document was translated by Gemini, Qwen, and Deepseek. Accuracy not guaranteed for technical terminology. *
 
 ---
 
@@ -94,60 +97,63 @@ If you thought this software could allow you to download games you don’t own w
 
 #### Q: How to use Manifest-related features?
 
-You can treat this page as a list of locally installed games, so you don't need to search through the store page every time - this is the simplest usage.
+> **! Note: Current version of GreenLuma no longer supports game downloading. For Family Shared games, please launch Steam without injection to download. !**
 
-The core purpose of Manifest functionality is game downloading, but with conditions:  
-1. Someone who owns the game must voluntarily share Manifest files and decryption keys with others.  
-2. Shared Manifests/keys are version-specific and expire after game updates.
+~~You can treat this page as a list of locally installed games, so you don't need to search through the store page every time - this is the simplest usage.~~
 
-Basic downloading doesn't require Family Sharing, making it suitable for sharing offline single-player games between friends through Steam, eliminating the need to send entire game files. For online play, purchasing through Steam is still required.
+~~The core purpose of Manifest functionality is game downloading, but with conditions:~~  
+~~1. Someone who owns the game must voluntarily share Manifest files and decryption keys with others.~~  
+~~2. Shared Manifests/keys are version-specific and expire after game updates.~~
 
-Alternatively, you can find shared Manifests on GitHub repositories or niche forums and import them.  
-*(Note: Some .st format keys shared on Steamtools forums use unclear encoding rules and are unsupported.)*
+~~Basic downloading doesn't require Family Sharing, making it suitable for sharing offline single-player games between friends through Steam, eliminating the need to send entire game files. For online play, purchasing through Steam is still required.~~
 
-**For game sharers**  
-1. Start downloading the target game (partial download is acceptable, pause after beginning).  
-2. Open software → Scan Manifests → Find the game → Click "Export" → Save ZIP file.  
-3. Send the generated ZIP to others.
+~~Alternatively, you can find shared Manifests on GitHub repositories or niche forums and import them.~~  
+~~*(Note: Some .st format keys shared on Steamtools forums use unclear encoding rules and are unsupported.)*~~
 
-**For receivers**  
-1. Drag the ZIP containing Manifest/key into the software window until "Added successfully" appears.  
-*(If dragging fails: Disable UAC or use "File Import" button)*  
-2. Launch Steam through the software. Wait for full startup.  
-*(Auto-checked depots during import; verify manually if unchecked)*  
-3. Open "Manifests" → Find the game matching ZIP name → Click "Download" button next to game title.  
-*(Critical: Must click the download button for the correct game本体 with matching store APPID)*
+~~**For game sharers**~~  
+~~1. Start downloading the target game (partial download is acceptable, pause after beginning).~~  
+~~2. Open software → Scan Manifests → Find the game → Click "Export" → Save ZIP file.~~  
+~~3. Send the generated ZIP to others.~~
 
-**Common Issues**  
+~~**For receivers**~~  
+~~1. Drag the ZIP containing Manifest/key into the software window until "Added successfully" appears.~~  
+~~*(If dragging fails: Disable UAC or use "File Import" button)*~~  
+~~2. Launch Steam through the software. Wait for full startup.~~  
+~~*(Auto-checked depots during import; verify manually if unchecked)*~~  
+~~3. Open "Manifests" → Find the game matching ZIP name → Click "Download" button next to game title.~~  
+~~*(Critical: Must click the download button for the correct game本体 with matching store APPID)*~~
 
-##### Q: Download completes instantly but game files are empty  
-A: Manifest not imported. Follow the import process above.
+~~**Common Issues**~~  
 
-##### Q: "Game config unavailable" after long wait  
-A: Wrong download button clicked. Only use the download button for the main game depot (outer box with store APPID).
+~~##### Q: Download completes instantly but game files are empty~~  
+~~A: Manifest not imported. Follow the import process above.~~
 
-##### Q: "No License" error  
-A: Steam not unlocked properly. Either:  
-- Launched Steam without the software  
-- Forgot to restart Steam after new Manifest import  
-Solution: Check game/depots → Relaunch Steam via software.
+~~##### Q: "Game config unavailable" after long wait~~  
+~~A: Wrong download button clicked. Only use the download button for the main game depot (outer box with store APPID).~~
 
-If this issue occurs frequently, it may be due to a recent change in Steam’s policies or a temporary failure in the software’s unlock functionality—requiring a future update to resolve.
+~~##### Q: "No License" error~~  
+~~A: Steam not unlocked properly. Either:~~  
+~~- Launched Steam without the software~~  
+~~- Forgot to restart Steam after new Manifest import~~  
+~~Solution: Check game/depots → Relaunch Steam via software.~~
 
-##### Q: "Content still encrypted" during download  
-A: Missing/invalid decryption key. Re-import correct Manifest files.
+~~If this issue occurs frequently, it may be due to a recent change in Steam’s policies or a temporary failure in the software’s unlock functionality—requiring a future update to resolve.~~
 
-##### Q: "Content config unavailable"  
-A: Manifest expired. Possible reasons:  
-1. Game updated - old Manifest invalid  
-2. Sharer's Manifest outdated (needs recent download/update)  
-3. Manifest deleted after uninstall - reimport required  
+~~##### Q: "Content still encrypted" during download~~  
+~~A: Missing/invalid decryption key. Re-import correct Manifest files.~~
+
+~~##### Q: "Content config unavailable"~~  
+~~A: Manifest expired. Possible reasons:~~  
+~~1. Game updated - old Manifest invalid~~  
+~~2. Sharer's Manifest outdated (needs recent download/update)~~  
+~~3. Manifest deleted after uninstall - reimport required~~  
 
 ~~Rarely caused by Steam cache issues - try rebooting.~~  
-*User Lioncky notes: New games often have this issue due to Steam server optimization. See [this issue](https://github.com/clinlx/CN_GreenLumaGUI/issues/42). Shared Manifests may expire if sharer becomes inactive.*
+~~*User Lioncky notes: New games often have this issue due to Steam server optimization. See [this issue](https://github.com/clinlx/CN_GreenLumaGUI/issues/42). Shared Manifests may expire if sharer becomes inactive.*~~
 
-##### Q: "No internet connection" during download
-A: If you’re certain your system isn’t actually offline, this error is often related to the same underlying cause as “Content config unavailable”—namely, an expired or invalid manifest.
+~~##### Q: "No internet connection" during download~~
+~~A: If you’re certain your system isn’t actually offline, this error is often related to the same underlying cause as “Content config unavailable”—namely, an expired or invalid manifest.~~
+
 
 
 #### Q: The library shows I have DLC, but why can't I unlock it in-game?
@@ -204,9 +210,9 @@ There have been resolved cases before, but I only know some of the reasons, whic
 6. If you've checked everything above and still can't find the cause, the last resort is to try launching in compatibility mode, then exit the software, and finally manually run C:\tmp\exewim2oav.addy.vlz\DLLInjector_bak.exe to see what kind of prompt the system gives.
 
 
-#### Q: Why is the limit 133 games?
+#### Q: Why is the limit 134 games?
 
-A: Since Greenluma is not open-source (at least I couldn’t find its source code), the maximum of 133 unlocks is a hardcoded limit set by the author. The reason might be that GreenLuma needs to spoof your game’s ID to bypass Steam’s validation, but the author only found 133 free games (accessible to everyone) that could be used for substitution.
+A: Since Greenluma is not open-source (at least I couldn’t find its source code), the maximum of 134 unlocks is a hardcoded limit set by the author. The reason might be that GreenLuma needs to spoof your game’s ID to bypass Steam’s validation, but the author only found 134 free games (accessible to everyone) that could be used for substitution.
 
 
 #### Q: I've been able to use this software, but suddenly today, Steam won't pop up when I open it.
@@ -262,6 +268,25 @@ The tool will neither delete nor modify this folder. Remember to remove it later
 
 [Gameloop.Vdf](https://github.com/shravan2x/Gameloop.Vdf)
 
-CommunityToolkit.Mvvm
+[Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json)
 
-Newtonsoft.Json
+CommunityToolkit.Mvvm
+---
+### Final Note
+
+This project started as an early work to facilitate gaming sessions with my friends. Having undergone a long period of patching and fixing, the code structure is somewhat messy, with many logic implementations being temporary solutions and some features remaining incomplete. It is open-sourced for communication and learning purposes only.
+
+This project serves solely as a GUI for GreenLuma. Compared to similar projects, it may have the following drawbacks:
+*   Requires Administrator privileges to run.
+*   May trigger false positives in antivirus software.
+*   Frame rate may drop when there are too many game files.
+*   Lacks some convenient features found in similar products, such as: Achievement Management, Game Unpacking, Stopping Game Updates, Denuvo Bypass, Direct Manifest Repository Usage, Network Acceleration, etc.
+
+CN-GreenLumaGUI does not aim to be an all-encompassing software. Therefore, there will be no major functional innovations in the future. However, it will be maintained long-term for bug fixes, translation adjustments, and updates to align with GreenLuma.
+
+Everyone is welcome to release works with similar functions (I would love to use them too), and modifications or refactoring of this project are also welcome.
+
+Thank you for your understanding and support.
+
+Sincerely,
+**The Developer of CN-GreenLumaGUI**

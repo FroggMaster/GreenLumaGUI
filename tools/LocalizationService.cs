@@ -1,4 +1,5 @@
 using CN_GreenLumaGUI.Models;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,20 +10,26 @@ namespace CN_GreenLumaGUI.tools
 {
     public static class LocalizationService
     {
-        public const string DefaultLanguageCode = "zh-CN";
+        public const string DefaultLanguageCode = "en-US";
+        private const string RegistryKeyPath = @"Software\CN_GreenLumaGUI";
+        private const string RegistryValueName = "LanguageCode";
 
-        private static readonly Dictionary<string, Uri> LanguageDictionaryMap = new()
+        private static readonly Dictionary<string, Uri> LanguageDictionaryMap = new(StringComparer.OrdinalIgnoreCase)
         {
             { "en-US", new Uri("Languages/Strings.en-US.xaml", UriKind.Relative) },
             { "zh-CN", new Uri("Languages/Strings.zh-CN.xaml", UriKind.Relative) },
-            { "zh-TW", new Uri("Languages/Strings.zh-TW.xaml", UriKind.Relative) }
+            { "zh-TW", new Uri("Languages/Strings.zh-TW.xaml", UriKind.Relative) },
+            { "ru-RU", new Uri("Languages/Strings.ru-RU.xaml", UriKind.Relative) },
+            { "uk-UA", new Uri("Languages/Strings.uk-UA.xaml", UriKind.Relative) }
         };
 
         private static readonly HashSet<string> LanguageResourcePaths = new()
         {
             "Languages/Strings.en-US.xaml",
             "Languages/Strings.zh-CN.xaml",
-            "Languages/Strings.zh-TW.xaml"
+            "Languages/Strings.zh-TW.xaml",
+            "Languages/Strings.ru-RU.xaml",
+            "Languages/Strings.uk-UA.xaml"
         };
 
         private static readonly List<LanguageOption> SupportedLanguageOptions = new()
@@ -30,11 +37,28 @@ namespace CN_GreenLumaGUI.tools
             new LanguageOption("zh-CN", "简体中文"),
             new LanguageOption("zh-TW", "繁體中文"),
             new LanguageOption("en-US", "English"),
+            new LanguageOption("ru-RU", "Русский"),
+            new LanguageOption("uk-UA", "Українська"),
         };
 
         public static IReadOnlyList<LanguageOption> SupportedLanguages => SupportedLanguageOptions;
 
         public static string CurrentLanguageCode { get; private set; } = DefaultLanguageCode;
+
+        public static void RemoveAllLanguageDictionaries()
+        {
+            if (Application.Current is null) return;
+            var mergedDictionaries = Application.Current.Resources.MergedDictionaries;
+            for (int i = mergedDictionaries.Count - 1; i >= 0; i--)
+            {
+                var source = mergedDictionaries[i].Source;
+                if (source is not null && LanguageResourcePaths.Any(path =>
+                    source.OriginalString.Equals(path, StringComparison.OrdinalIgnoreCase)))
+                {
+                    mergedDictionaries.RemoveAt(i);
+                }
+            }
+        }
 
         public static void ApplyLanguage(string? languageCode)
         {
@@ -93,6 +117,19 @@ namespace CN_GreenLumaGUI.tools
                     }
                 }
             }
+        }
+
+        public static string GetSteamAcceptLanguageCode(string languageCode)
+        {
+            return languageCode switch
+            {
+                "en-US" => "en-us",
+                "zh-TW" => "zh-tw",
+                "zh-CN" => "zh-cn",
+                "ru-RU" => "ru-ru",
+                "uk-UA" => "uk-ua",
+                _ => "en-us"
+            };
         }
 
         private static bool HasLanguageDictionary()
@@ -159,6 +196,14 @@ namespace CN_GreenLumaGUI.tools
                     case "MO": // 澳門
                         return "zh-TW";
 
+                    case "RU": // 俄羅斯
+                    case "BY": // 白俄羅斯
+                    case "KZ": // 哈薩克
+                        return "ru-RU";
+
+                    case "UA": // 烏克蘭
+                        return "uk-UA";
+
                     default: // 其他地區
                         // 如果 UI 語言是中文，但地區不是中國/台灣/香港，則判斷是簡體還是繁體
                         var cultureInfo = CultureInfo.CurrentUICulture;
@@ -179,6 +224,18 @@ namespace CN_GreenLumaGUI.tools
                             }
                         }
 
+                        // 檢查是否為俄語
+                        if (cultureInfo.Name.StartsWith("ru", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return "ru-RU";
+                        }
+
+                        // 檢查是否為烏克蘭語
+                        if (cultureInfo.Name.StartsWith("uk", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return "uk-UA";
+                        }
+
                         return "en-US";
                 }
             }
@@ -187,6 +244,36 @@ namespace CN_GreenLumaGUI.tools
                 // 記錄錯誤並返回預設語言
                 OutAPI.PrintLog($"Failed to detect system language: {ex.Message}");
                 return DefaultLanguageCode;
+            }
+        }
+
+        public static string? LoadLanguageFromSystem()
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath);
+                if (key?.GetValue(RegistryValueName) is string langCode)
+                {
+                    return langCode;
+                }
+            }
+            catch (Exception ex)
+            {
+                OutAPI.PrintLog($"Failed to load language from registry: {ex.Message}");
+            }
+            return null;
+        }
+
+        public static void SaveLanguageToSystem(string languageCode)
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.CreateSubKey(RegistryKeyPath);
+                key?.SetValue(RegistryValueName, languageCode);
+            }
+            catch (Exception ex)
+            {
+                OutAPI.PrintLog($"Failed to save language to registry: {ex.Message}");
             }
         }
     }

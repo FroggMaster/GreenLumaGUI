@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -32,7 +32,7 @@ namespace CN_GreenLumaGUI.tools
                 data = ReadAppListFromByte(Convert.FromBase64String(str));
                 if (data == null)
                 {
-                    _ = OutAPI.MsgBox("Can not read app list from inlay dll!");
+                    _ = OutAPI.MsgBox(LocalizationService.GetString("Dll_ReadInlayFailed"));
                     return null;
                 }
                 defaultCache = data;
@@ -55,7 +55,7 @@ namespace CN_GreenLumaGUI.tools
                     data = ReadAppListFromByte(File.ReadAllBytes(target));
                     if (data == null)
                     {
-                        _ = OutAPI.MsgBox("Can not read app list from outside dll!");
+                        _ = OutAPI.MsgBox(LocalizationService.GetString("Dll_ReadOutsideFailed"));
                         return null;
                     }
                     outsideDllKey = cacheKey;
@@ -69,7 +69,7 @@ namespace CN_GreenLumaGUI.tools
             }
             return data;
         }
-        public const int TotalMaxUnlockNum = 133; //GreenLuma最大支持到133的上限
+        public const int TotalMaxUnlockNum = 134; //GreenLuma最大支持到134的上限
         private const int intSize = 4;
         private const int preNum = 16;
         private static readonly byte[] prePattern =

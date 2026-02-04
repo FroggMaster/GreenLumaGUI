@@ -21,6 +21,8 @@
     <sys:String x:Key="Common_No">No</sys:String>
     <sys:String x:Key="Common_Yes">Yes</sys:String>
     <sys:String x:Key="Settings_CompatNote">(Compatibility mode trades stealth for reliability and may fix launch failures on some PCs.)</sys:String>
+    <sys:String x:Key="Settings_SkipSteamUpdate">Skip Steam Update</sys:String>
+    <sys:String x:Key="Settings_SkipSteamUpdateNote">(Skip Steam updates when launching through this tool [with or without injection].)</sys:String>
     <sys:String x:Key="Settings_ThemeLabel">GUI theme:</sys:String>
     <sys:String x:Key="Common_Default">Default</sys:String>
     <sys:String x:Key="Settings_ThemeDark">Dark</sys:String>
@@ -38,6 +40,7 @@
     <sys:String x:Key="Settings_ConfigManifestFromApiNoteLine2">(Enabling this may slow down the first name lookup)</sys:String>
     <sys:String x:Key="ConfigEchoStartSteamNormalButton">Show "N" Button:</sys:String>
     <sys:String x:Key="Settings_ConfigEchoStartSteamNormalButtonNote">(Launching Steam via this button starts it normally, without unlocking any games.)</sys:String>
+    <sys:String x:Key="Settings_ShowManifestDownloadButton">Show hidden manifest download button:</sys:String>
     <sys:String x:Key="Settings_ClearDataWarning" xml:space="preserve">Clearing app data is a dangerous action. Please do it manually.
 After closing the app, delete the data files to wipe the data.
 [Path] {0}</sys:String>
@@ -51,6 +54,9 @@ Make sure the games you play do not use VAC.</sys:String>
     <sys:String x:Key="Settings_UpdateFailed">Failed to get the update URL. Please try again later.</sys:String>
     <sys:String x:Key="Settings_LanguageApplied">Language applied</sys:String>
     <sys:String x:Key="Settings_LanguageSaveFailed">Failed to save language settings: {0}</sys:String>
+    <sys:String x:Key="Settings_OpenSourceLicenses">Open Source Licenses</sys:String>
+    <sys:String x:Key="License_SpecialThanks">Special Thanks</sys:String>
+    <sys:String x:Key="License_GreenLumaCredit">GreenLuma and its author Steam006</sys:String>
 
     <!-- ManagerWindow - Sidebar and Main Window -->
     <sys:String x:Key="Sidebar_UnlockList">Unlocks</sys:String>
@@ -58,6 +64,11 @@ Make sure the games you play do not use VAC.</sys:String>
     <sys:String x:Key="Sidebar_ManualAdd">Add</sys:String>
     <sys:String x:Key="Sidebar_LocalManifest">Files</sys:String>
     <sys:String x:Key="Sidebar_Settings">Settings</sys:String>
+    <sys:String x:Key="PageTitle_UnlockList">Unlock List</sys:String>
+    <sys:String x:Key="PageTitle_SearchGame">Search Game</sys:String>
+    <sys:String x:Key="PageTitle_ManualAdd">Manual Add</sys:String>
+    <sys:String x:Key="PageTitle_LocalManifest">Manifest Files</sys:String>
+    <sys:String x:Key="PageTitle_Settings">Settings</sys:String>
     <sys:String x:Key="Bottom_NormalRestart">Normal Restart</sys:String>
     <sys:String x:Key="Bottom_NormalRestart_ToolTip">Close Steam and restart it normally (without injection)</sys:String>
     <sys:String x:Key="Bottom_InjectRestart">Inject Restart</sys:String>
@@ -85,13 +96,24 @@ Make sure the games you play do not use VAC.</sys:String>
     <sys:String x:Key="Search_RatingColumn">Rating</sys:String>
     <sys:String x:Key="Search_StorePageColumn">Store Page</sys:String>
     <sys:String x:Key="Search_AddToListColumn">Add to List</sys:String>
-    <sys:String x:Key="Search_InstructionLine1">Searches the Steam Store for games (not DLC). Requires a connection to the Steam Store.</sys:String>
-    <sys:String x:Key="Search_InstructionLine2">(If unable to connect, try using a VPN. If search fails, check the English name on the Steam Store.)</sys:String>
+    <sys:String x:Key="Search_Instruction" xml:space="preserve">Searches the Steam Store for games (not DLC). Requires a connection to the Steam Store.&#x0a;(If unable to connect, try using a VPN. If search fails, check the English name on the Steam Store.)</sys:String>
     <sys:String x:Key="Search_EnterSearchContent">Please enter search content</sys:String>
     <sys:String x:Key="Search_NoRating">No reviews yet</sys:String>
 
     <!-- ManualAddPage -->
     <sys:String x:Key="Manual_TitleAddGame">Add a New Game</sys:String>
+
+    <!-- GLFileTool -->
+    <sys:String x:Key="GL_SteamPathNotFound">Steam installation directory not found. Please manually select the location of steam.exe!</sys:String>
+    <sys:String x:Key="GL_DllOccupied">Dll file is in use! Please try restarting your computer!</sys:String>
+    <sys:String x:Key="GL_UnpackFailed">Failed to unpack temporary files to C drive!</sys:String>
+    <sys:String x:Key="GL_IniOutputFailed">Exception occurred while outputting ini config!</sys:String>
+    <sys:String x:Key="GL_TxtOutputFailed">Exception occurred while outputting txt config!</sys:String>
+    <sys:String x:Key="GL_SteamPathNull">Fail: steamPath is null</sys:String>
+    <sys:String x:Key="Common_Error">Error</sys:String>
+    <sys:String x:Key="Common_Exception">Exception</sys:String>
+    <sys:String x:Key="Manifest_ParentNotFound">Parent not found and temporary parent not created</sys:String>
+    <sys:String x:Key="GL_UserOverride">User Override {0}</sys:String>
     <sys:String x:Key="Manual_TitleAddDLC">Add a New DLC</sys:String>
     <sys:String x:Key="Manual_TitleEditGame">Edit Game Properties</sys:String>
     <sys:String x:Key="Manual_TitleEditDLC">Edit DLC Properties</sys:String>
@@ -146,7 +168,10 @@ For family-shared games, selecting only the correct depots allows download/updat
     <sys:String x:Key="Search_NextPage">Next Page</sys:String>
 
     <!-- ManagerViewModel_Dock -->
-    <sys:String x:Key="Dock_FAQ">FAQ</sys:String>
+    <sys:String x:Key="Window_Title_FAQ">FAQ</sys:String>
+    <sys:String x:Key="Manager_NormalStartButton_Text">N</sys:String>
+    <!-- Pure number 0~200 -->
+    <sys:String x:Key="Window_DockWidth">120</sys:String>
     <sys:String x:Key="Dock_UnlockLimitExceeded">Unlock limit exceeded.</sys:String>
     <sys:String x:Key="Dock_SteamPathNotFound">Unable to find Steam path!</sys:String>
     <sys:String x:Key="Dock_SteamPathInvalid">Invalid Steam path!</sys:String>
@@ -159,7 +184,7 @@ For family-shared games, selecting only the correct depots allows download/updat
     <sys:String x:Key="Dock_OpenVCRedistUrl">Open Microsoft VC++ runtime download page?</sys:String>
     <sys:String x:Key="Dock_TryCompatMode">Detected system compatibility issue, attempting launch in compatibility mode.</sys:String>
     <sys:String x:Key="Dock_TempFileLost">Temporary files missing, possibly deleted by Windows Security. Try installing another antivirus (e.g. Huorong) which will disable Windows Security, then try launching again.</sys:String>
-    <sys:String x:Key="Dock_OpenHuorongUrl"></sys:String>
+    <sys:String x:Key="Dock_OpenHuorongUrl">None</sys:String>
     <sys:String x:Key="Dock_LaunchFailedFormat">Launch failed! Please contact developer. ({0})</sys:String>
     <sys:String x:Key="Dock_LaunchFailedBase">Launch failed! Please contact developer.</sys:String>
     <sys:String x:Key="Dock_CheckFAQ">Check FAQ for help. If unresolved, please submit an issue on GitHub.</sys:String>
@@ -171,7 +196,6 @@ For family-shared games, selecting only the correct depots allows download/updat
     <sys:String x:Key="Dock_InjectorSteamNotFound">Injector crashed: [Unable to locate Steam.exe]</sys:String>
     <sys:String x:Key="Dock_InjectorConfigMissing">Injector crashed: [Config file missing]</sys:String>
     <sys:String x:Key="Dock_InjectorEndFileFailed">Injector crashed: [Failed to create end file]</sys:String>
-    <sys:String x:Key="Common_Error">Error</sys:String>
 
     <!-- ManifestListPage - Messages -->
     <sys:String x:Key="Msg_SteamPathNotSet">Steam path not set correctly</sys:String>
@@ -206,4 +230,50 @@ Disabling UAC enables the drag-and-drop feature and eliminates authorization pro
 Confirm disabling UAC?
 If Yes, the application will configure the registry to disable UAC.
 If No, no action will be taken.</sys:String>
+    <sys:String x:Key="Vdf_ScanError">Error while scanning Steam depot keys.</sys:String>
+    <sys:String x:Key="Vdf_UnsupportedStFormat">Importing *.st format manifest key files is not supported!</sys:String>
+    <sys:String x:Key="Vdf_ConfigKeyError">Failed to get keys from Steam config!</sys:String>
+    <sys:String x:Key="Dll_ReadInlayFailed">Can not read app list from inlay dll!</sys:String>
+    <sys:String x:Key="Dll_ReadOutsideFailed">Can not read app list from outside dll!</sys:String>
+    <sys:String x:Key="Dll_ReadFailedFormat">Fail to read app list from dll.({0})</sys:String>
+    <sys:String x:Key="Search_ExceptionFormat">An exception occurred during search ({0})</sys:String>
+    <sys:String x:Key="Export_ZipOnly">Can only export as zip file!</sys:String>
+    <sys:String x:Key="Export_Failed">Export failed</sys:String>
+    <sys:String x:Key="Export_ContentMissingFormat">{0} parts may have been uninstalled!</sys:String>
+    <sys:String x:Key="Manifest_UnknownGameOrDlc">Unknown Game or DLC</sys:String>
+    <sys:String x:Key="Manifest_SelectAllDepotsFormat">Select All Depots ({0})</sys:String>
+    <sys:String x:Key="Common_DownloadTriggerSteamRunning">Download can only be triggered when Steam is running</sys:String>
+    <sys:String x:Key="Common_DownloadTriggerAttempt">Attempting to trigger download (depends on manifest status)</sys:String>
+    <sys:String x:Key="Manifest_ExportSuccess">Export Successful</sys:String>
+    <sys:String x:Key="Manifest_ExportMissingManifestsFormat">Found {0} missing manifest files during export,\n</sys:String>
+    <sys:String x:Key="Manifest_ExportMissingKeysFormat">Found {0} missing keys during export,\n</sys:String>
+    <sys:String x:Key="Manifest_ExportFailed">Export Failed</sys:String>
+    <sys:String x:Key="Depot_UnknownDepot">Unknown Depot</sys:String>
+    <sys:String x:Key="Game_DlcListRefreshed">Game DLC list refreshed</sys:String>
+    <sys:String x:Key="Game_DlcListRefreshFailed">Refresh failed: Cannot get DLC list from Steam</sys:String>
+    <sys:String x:Key="Game_DeletedFormat">Game Deleted: {0}</sys:String>
+    <sys:String x:Key="Dlc_Deleted">DLC Deleted</sys:String>
+    <sys:String x:Key="Settings_SteamFamilySharingLabel">Steam New Family Sharing Mode:</sys:String>
+    <sys:String x:Key="Settings_SteamFamilySharingNote">(Steam has introduced new family sharing features, this option is used to unlock new family sharing restrictions)</sys:String>
+    <sys:String x:Key="Manual_EnterAppIdRange">Please enter the start and end values for the AppID range.</sys:String>
+    <sys:String x:Key="Manual_InvalidAppIdRange">Please enter a valid numeric AppID range.</sys:String>
+    <sys:String x:Key="Manual_StartGreaterThanEnd">The start value of the AppID range cannot be greater than the end value.</sys:String>
+
+    <!-- GLFileTool -->
+    <sys:String x:Key="GL_DllFileInUse">DLL file is in use! Please try restarting your computer!</sys:String>
+    <sys:String x:Key="GL_TempFileUnpackFailed">Failed to unpack temporary files to C drive!</sys:String>
+    <sys:String x:Key="GL_IniOutputError">Exception occurred while attempting to output ini configuration!</sys:String>
+    <sys:String x:Key="Manual_Unnamed">Unnamed</sys:String>
+    <sys:String x:Key="Manual_NameEmpty">Name cannot be empty.</sys:String>
+    <sys:String x:Key="Manual_AppIdEmpty">AppID cannot be empty.</sys:String>
+    <sys:String x:Key="Manual_InvalidUrl">Invalid URL.</sys:String>
+    <sys:String x:Key="Manual_SelectGameFirst">Please select a game to add DLC to first.</sys:String>
+    <sys:String x:Key="Manual_InvalidAppId">Unable to parse a valid numeric AppID.</sys:String>
+    <sys:String x:Key="Manual_GameAdded">Game added successfully.</sys:String>
+    <sys:String x:Key="Manual_DlcAdded">DLC added successfully.</sys:String>
+    <sys:String x:Key="Manual_GameEdited">Game properties modified successfully.</sys:String>
+    <sys:String x:Key="Manual_DlcEdited">DLC properties modified successfully.</sys:String>
+    <sys:String x:Key="Manual_UnknownDataType">Unknown data type.</sys:String>
+    <sys:String x:Key="Window_Loading_Title">Loading Window</sys:String>
+    <sys:String x:Key="Window_Loading_Label">Loading...</sys:String>
 </ResourceDictionary>

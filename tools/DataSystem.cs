@@ -1,4 +1,4 @@
-﻿using CN_GreenLumaGUI.Messages;
+using CN_GreenLumaGUI.Messages;
 using CN_GreenLumaGUI.Models;
 using CommunityToolkit.Mvvm.Messaging;
 using MaterialDesignThemes.Wpf;
@@ -42,6 +42,7 @@ namespace CN_GreenLumaGUI.tools
                     return;
                 languageCode = targetCode;
                 LocalizationService.ApplyLanguage(languageCode);
+                LocalizationService.SaveLanguageToSystem(languageCode);
                 WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(LanguageCode)));
             }
         }
@@ -200,11 +201,22 @@ namespace CN_GreenLumaGUI.tools
                 echoStartSteamNormalButton = value;
                 WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(EchoStartSteamNormalButton)));
             }
-        }
+		}
 
-        //添加完字段后记得看看LoadData()和SettingsPageViewModel第34行
+		private bool skipSteamUpdate;
+		public bool SkipSteamUpdate
+		{
+			get => skipSteamUpdate;
+			set
+			{
+				skipSteamUpdate = value;
+				WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(SkipSteamUpdate)));
+			}
+		}
 
-        private DataSystem()
+		//添加完字段后记得看看LoadData()和SettingsPageViewModel第34行
+
+		private DataSystem()
         {
             gameDatas = new();
             gameExist = new();
@@ -215,6 +227,17 @@ namespace CN_GreenLumaGUI.tools
         public readonly static string apiSteamAppInfoCacheFile = $"{OutAPI.TempDir}\\apiSteamAppInfoCache.json";
         public readonly static string depotMapCacheFile = $"{OutAPI.TempDir}\\depotMapCacheFile.json";
         public readonly static string manifestListCacheFile = $"{OutAPI.TempDir}\\manifestListCache.json";
+        private bool showManifestDownloadButton;
+        public bool ShowManifestDownloadButton
+        {
+            get => showManifestDownloadButton;
+            set
+            {
+                showManifestDownloadButton = value;
+                WeakReferenceMessenger.Default.Send(new ConfigChangedMessage(nameof(ShowManifestDownloadButton)));
+            }
+        }
+
         private readonly static string configFile = $"{OutAPI.TempDir}\\config.json";
         private readonly static string unlockListFile = $"{OutAPI.TempDir}\\unlocklist.json";
         private readonly static string depotUnlockListFile = $"{OutAPI.TempDir}\\unlocklist_depot.json";
@@ -244,7 +267,11 @@ namespace CN_GreenLumaGUI.tools
             }
             LastVersion = readConfig?.LastVersion ?? "null";
             StartSuccessTimes = readConfig?.StartSuccessTimes ?? 0;
-            LanguageCode = readConfig?.LanguageCode ?? string.Empty;
+            // 優先保留 App.OnStartup 中從註冊表讀取的語言設置
+            if (string.IsNullOrWhiteSpace(languageCode))
+            {
+                LanguageCode = readConfig?.LanguageCode ?? string.Empty;
+            }
             SteamPath = readConfig?.SteamPath;
             DarkMode = readConfig?.DarkMode ?? false;
             HidePromptText = readConfig?.HidePromptText ?? false;
@@ -260,8 +287,10 @@ namespace CN_GreenLumaGUI.tools
             SingleConfigFileMode = readConfig?.SingleConfigFileMode ?? false;
             GetManifestInfoFromApi = readConfig?.GetManifestInfoFromApi ?? true;
             EchoStartSteamNormalButton = readConfig?.EchoStartSteamNormalButton ?? false;
-            //读取游戏列表文件
-            string gameDataText = "[]";
+			SkipSteamUpdate = readConfig?.SkipSteamUpdate ?? true;
+            ShowManifestDownloadButton = readConfig?.ShowManifestDownloadButton ?? false;
+			//读取游戏列表文件
+			string gameDataText = "[]";
             if (File.Exists(unlockListFile))
             {
                 gameDataText = File.ReadAllText(unlockListFile);

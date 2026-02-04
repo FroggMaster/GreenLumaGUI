@@ -1,4 +1,4 @@
-﻿using CN_GreenLumaGUI.ViewModels;
+using CN_GreenLumaGUI.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;
@@ -37,7 +37,7 @@ namespace CN_GreenLumaGUI.tools
 			res = GetSteamPath_ProgramFiles();
 			if (res != "")
 				return res;
-			OutAPI.MsgBox("未找到Steam安装目录，请手动选择steam.exe所在位置!").Wait();
+			OutAPI.MsgBox(LocalizationService.GetString("GL_SteamPathNotFound")).Wait();
 			return GetSteamPath_UserChose();
 		}
 		public static string GetSteamPath_RegistryKey()
@@ -153,7 +153,7 @@ namespace CN_GreenLumaGUI.tools
 				return false;
 			if (!Directory.Exists(DLLInjectorAppList))
 				return false;
-			if (!new DirectoryInfo(DLLInjectorAppList).GetFiles("*.txt").Any())
+			if (new DirectoryInfo(DLLInjectorAppList).GetFiles("*.txt").Length == 0)
 				return false;
 			return true;
 		}
@@ -198,7 +198,7 @@ namespace CN_GreenLumaGUI.tools
 			}
 			catch (Exception ex)
 			{
-				_ = OutAPI.MsgBox(ex.Message, "Error");
+				_ = OutAPI.MsgBox(ex.Message, LocalizationService.GetString("Common_Error"));
 				throw new Exception("StartGreenLuma Error");
 			}
 			finally
@@ -280,7 +280,7 @@ namespace CN_GreenLumaGUI.tools
 			}
 			catch (Exception ex)
 			{
-				_ = OutAPI.MsgBox(ex.Message, "Error");
+				_ = OutAPI.MsgBox(ex.Message, LocalizationService.GetString("Common_Error"));
 				throw new Exception("StartGreenLuma_Bak Error");
 			}
 			finally
@@ -403,11 +403,11 @@ namespace CN_GreenLumaGUI.tools
 			}
 		}
 
-		public static bool WriteGreenLumaConfig(string? steamPath)
+		public static bool WriteGreenLumaConfig(string? steamPath, bool skipSteamUpdate)
 		{
 			if (steamPath is null or "")
 			{
-				_ = OutAPI.MsgBox("Fail: steamPath is null", "Error");
+				_ = OutAPI.MsgBox(LocalizationService.GetString("GL_SteamPathNull"), LocalizationService.GetString("Common_Error"));
 				return false;
 			}
 			int[]? appRemap = null;
@@ -423,7 +423,7 @@ namespace CN_GreenLumaGUI.tools
 				{
 					File.Delete(DLLInjectorExePath);
 					File.Copy(OverrideExe, DLLInjectorExePath);
-					ManagerViewModel.Inform("User Override DLLInjector.exe");
+					ManagerViewModel.Inform(string.Format(LocalizationService.GetString("GL_UserOverride"), "DLLInjector.exe"));
 				}
 				else OutAPI.CreateByB64(DLLInjectorExePath, "DLLInjector.exe", true);
 				OutAPI.CreateByB64(SpcrunExePath, "spcrun.exe", true);
@@ -476,12 +476,13 @@ namespace CN_GreenLumaGUI.tools
 			File.WriteAllText(GreenLumaNoQuestionFile, "1");
 			// 生成 ini 文件
 			string configTemp;
+			var commandLine = skipSteamUpdate ? "-noverifyfiles -nobootstrapupdate -skipinitialbootstrap -norepairfiles -overridepackageurl" : "-test";
 
 			if (File.Exists(OverrideConfigTemp)) configTemp = File.ReadAllText(OverrideConfigTemp);
 			else configTemp = OutAPI.GetFromRes("DLLInjector.configTemp.ini")!;
 			File.WriteAllText(DLLInjectorIniPath, string.Format(configTemp,
 				steamPath,
-				"", // -inhibitbootstrap
+				commandLine, // -inhibitbootstrap
 				GreenLumaDllPath,
 				0, // 1
 				2,
@@ -495,7 +496,7 @@ namespace CN_GreenLumaGUI.tools
 				if (!iniStr.Contains("[DllInjector]") ||
 					!iniStr.Contains("FileToPatch_1 ="))
 				{
-					_ = OutAPI.MsgBox("尝试输出ini配置异常！", "Error");
+					_ = OutAPI.MsgBox(LocalizationService.GetString("GL_IniOutputError"), "Error");
 					return false;
 				}
 			}
@@ -508,16 +509,16 @@ namespace CN_GreenLumaGUI.tools
 			File.WriteAllText(DLLInjectorBakTxtPath, "steam.exe\r\n");
 			File.AppendAllText(DLLInjectorBakTxtPath, $"{GreenLumaDllPath}\r\n");
 			File.AppendAllText(DLLInjectorBakTxtPath, $"{steamPath}\r\n");
-			File.AppendAllText(DLLInjectorBakTxtPath, "-inhibitbootstrap\r\n");
+			File.AppendAllText(DLLInjectorBakTxtPath, $"{commandLine}\r\n");
 			File.AppendAllText(DLLInjectorBakTxtPath, "10\r\n");
 			// 检验 bak txt文件
 			try
 			{
 				var txtStr = File.ReadAllText(DLLInjectorBakTxtPath);
 				if (!txtStr.Contains(GreenLumaDllPath) ||
-					!txtStr.Contains("-inhibitbootstrap"))
+					!txtStr.Contains(commandLine))
 				{
-					_ = OutAPI.MsgBox("尝试输出txt配置异常！", "Error");
+					_ = OutAPI.MsgBox(LocalizationService.GetString("GL_TxtOutputFailed"), LocalizationService.GetString("Common_Error"));
 					return false;
 				}
 			}
