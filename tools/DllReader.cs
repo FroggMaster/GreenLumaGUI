@@ -69,15 +69,15 @@ namespace CN_GreenLumaGUI.tools
             }
             return data;
         }
-        public const int TotalMaxUnlockNum = 134; //GreenLuma最大支持到134的上限
+        public const int TotalMaxUnlockNum = 135; //GreenLuma最大支持到135的上限
         private const int intSize = 4;
-        private const int preNum = 16;
+        private const int preNum = 0;
         private static readonly byte[] prePattern =
         {
-            0xB8,0xCC,0xCC,0xCC,
-            0xCC,0xFF,0xD0,0x61,
-            0x9D,0xC3,0x01,0x00,
-            0x00,0x00,0x00,0x00,
+            0x5A,0x00,0x00,0x00,
+            0xCD,0x00,0x00,0x00,
+            0xDB,0x00,0x00,0x00,
+            0x36,0x01,0x00,0x00,
         };
         private static int[]? ReadAppListFromByte(byte[] data)
         {
@@ -96,6 +96,7 @@ namespace CN_GreenLumaGUI.tools
                         int val = BitConverter.ToInt32(arrayBytes, k * intSize);
                         if (val <= 1) break;
                         intArray.Add(val);
+                        // OutAPI.MsgBox($"{val}({k})");
                     }
                     return intArray.ToArray();
                 }
